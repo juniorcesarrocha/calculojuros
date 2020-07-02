@@ -1,0 +1,63 @@
+using AutoMapper;
+using CalculoJuros.Domain.Contracts;
+using CalculoJuros.Domain.Services;
+using CalculoJuros.Infrastructure.Config;
+using CalculoJuros.Infrastructure.Notifications;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+namespace CalculoJuros.Web.Api
+{
+    public class StartupApiTests
+    {
+        public StartupApiTests(IWebHostEnvironment hostEnvironment)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(hostEnvironment.ContentRootPath)
+                .AddJsonFile("appsettings.json", true, true)
+                .AddJsonFile($"appsettings.{hostEnvironment.EnvironmentName}.json", true, true)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddAutoMapper(typeof(Startup));
+
+            services.AddScoped<ITaxaJurosService, TaxaJurosService>();
+
+            services.AddScoped<IRequestNotificator, RequestNotificator>();
+
+            services.SwaggerConfigureServices();
+
+            services.AddControllers();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseSwaggerConfig();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+        }
+    }
+}
